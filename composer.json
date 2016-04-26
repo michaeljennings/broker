@@ -1,0 +1,23 @@
+{
+  "name": "michaeljennings/broker",
+  "description": "A laravel package for caching keys against an object",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Michael Jennings",
+      "email": "michael.jennings91@gmail.com"
+    }
+  ],
+  "require": {
+    "illuminate/cache": ">=5.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "Michaeljennings\\Broker\\": "src/"
+    },
+    "files": [
+      "src/helpers.php"
+    ]
+  },
+  "minimum-stability": "stable"
+}
