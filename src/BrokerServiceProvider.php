@@ -21,7 +21,7 @@ class BrokerServiceProvider extends ServiceProvider
     public function register()
     {
         $this->app->singleton('Michaeljennings\Broker\Contracts\Broker', 'Michaeljennings\Broker\Broker');
-        $this->alias('Michaeljennings\Broker\Contracts\Broker', 'broker');
+        $this->app->alias('Michaeljennings\Broker\Contracts\Broker', 'broker');
     }
 
     /**
