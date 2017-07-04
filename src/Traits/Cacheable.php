@@ -4,7 +4,7 @@ namespace Michaeljennings\Broker\Traits;
 
 use Michaeljennings\Broker\Observer;
 
-class Cacheable
+trait Cacheable
 {
     /**
      * Boot the trait.
