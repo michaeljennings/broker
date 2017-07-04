@@ -14,11 +14,6 @@ class Observer
      */
     protected $broker;
 
-    public function __construct(Broker $broker)
-    {
-        $this->broker = $broker;
-    }
-
     /**
      * @param Model $model
      */
@@ -58,6 +53,6 @@ class Observer
      */
     protected function flush(Model $model)
     {
-        $this->broker->flush($model);
+        broker()->flush($model);
     }
 }
