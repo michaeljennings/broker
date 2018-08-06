@@ -25,4 +25,20 @@ trait Cacheable
     {
         return $this->getTable();
     }
+
+    /**
+     * Clear the cache for this cacheable entity.
+     */
+    public function flushCache()
+    {
+        return broker()->flush($this);
+    }
+
+    /**
+     * Clear all of the cache entities associated with this cacheable type.
+     */
+    public function flushAll()
+    {
+        return broker()->flushAll(get_class($this));
+    }
 }

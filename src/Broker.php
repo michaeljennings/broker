@@ -115,7 +115,7 @@ class Broker implements BrokerContract
      * Remove all of the cacheable item's cached items.
      *
      * @param Cacheable $cacheable
-     * @return mixed
+     * @return void
      */
     public function flush(Cacheable $cacheable)
     {

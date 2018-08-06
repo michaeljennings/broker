@@ -67,7 +67,7 @@ interface Broker
      * Remove all of the referee's cached items.
      *
      * @param Cacheable $cacheable
-     * @return mixed
+     * @return void
      */
     public function flush(Cacheable $cacheable);
 
