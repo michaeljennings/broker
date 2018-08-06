@@ -72,15 +72,24 @@ interface Broker
     public function flush(Cacheable $cacheable);
 
     /**
-     * Flush all of the provided keys from the cache. This can be useful if
+     * Flush all of the cache stored for a cacheable type, not just the
+     * entity itself.
+     *
+     * @param Cacheable|string $cacheable
+     * @return void
+     */
+    public function flushAll($cacheable);
+
+    /**
+     * Flush all of the provided tags from the cache. This can be useful if
      * you want to remove all of one type, not just where it is associated
      * with a cacheable item.
      *
      * i.e. The sidebar items are cached against the user's and you want
      * to remove all of the sidebar items.
      *
-     * @param array|string $keys
+     * @param array|string $tags
      * @return mixed
      */
-    public function flushKeys($keys);
+    public function flushTags($tags);
 }

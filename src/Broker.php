@@ -80,6 +80,18 @@ class Broker implements BrokerContract
     }
 
     /**
+     * Check if the cacheable item has an item in the cache.
+     *
+     * @param Cacheable $cacheable
+     * @param string    $key
+     * @return mixed
+     */
+    public function has(Cacheable $cacheable, $key)
+    {
+        return $this->cache->tags($this->getTags($cacheable))->has($key);
+    }
+
+    /**
      * Remove an item or multiple items from the cacheable item's cache.
      *
      * @param Cacheable    $cacheable
@@ -100,18 +112,6 @@ class Broker implements BrokerContract
     }
 
     /**
-     * Check if the cacheable item has an item in the cache.
-     *
-     * @param Cacheable $cacheable
-     * @param string    $key
-     * @return mixed
-     */
-    public function has(Cacheable $cacheable, $key)
-    {
-        return $this->cache->tags($this->getTags($cacheable))->has($key);
-    }
-
-    /**
      * Remove all of the cacheable item's cached items.
      *
      * @param Cacheable $cacheable
@@ -123,6 +123,22 @@ class Broker implements BrokerContract
     }
 
     /**
+     * Flush all of the cache stored for a cacheable type, not just the
+     * entity itself.
+     *
+     * @param Cacheable|string $cacheable
+     * @return void
+     */
+    public function flushAll($cacheable)
+    {
+        if (is_string($cacheable)) {
+            $cacheable = new $cacheable;
+        }
+
+        $this->flushTags($cacheable->getCacheKey());
+    }
+
+    /**
      * Flush all of the provided keys from the cache. This can be useful if
      * you want to remove all of one type, not just where it is associated
      * with a cacheable item.
@@ -130,16 +146,16 @@ class Broker implements BrokerContract
      * i.e. The sidebar items are cached against the user's and you want
      * to remove all of the sidebar items.
      *
-     * @param array|string $keys
-     * @return mixed
+     * @param array|string $tags
+     * @return void
      */
-    public function flushKeys($keys)
+    public function flushTags($tags)
     {
-        if ( ! is_array($keys)) {
-            $keys = func_get_args();
+        if ( ! is_array($tags)) {
+            $tags = func_get_args();
         }
 
-        return $this->cache->tags($keys)->flush();
+        $this->cache->tags($tags)->flush();
     }
 
     /**
