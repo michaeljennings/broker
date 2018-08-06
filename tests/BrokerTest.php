@@ -15,7 +15,7 @@ class BrokerTest extends TestCase
 
         $this->makeBroker()->put($cacheable, 'foo', 'bar', 60);
 
-        $this->assertEquals($this->app->make('cache')->tags($cacheable->getCacheKey(), $cacheable->id)->get('foo'), 'bar');
+        $this->assertEquals($this->app->make('cache')->tags([$cacheable->getCacheKey(), $cacheable->id])->get('foo'), 'bar');
     }
 
     /**
@@ -27,7 +27,7 @@ class BrokerTest extends TestCase
 
         $this->makeBroker()->forever($cacheable, 'foo', 'bar');
 
-        $this->assertEquals($this->app->make('cache')->tags($cacheable->getCacheKey(), $cacheable->id)->get('foo'), 'bar');
+        $this->assertEquals($this->app->make('cache')->tags([$cacheable->getCacheKey(), $cacheable->id])->get('foo'), 'bar');
     }
 
     /**
@@ -41,7 +41,7 @@ class BrokerTest extends TestCase
             return 'bar';
         });
 
-        $this->assertEquals($this->app->make('cache')->tags($cacheable->getCacheKey(), $cacheable->id)->get('foo'), 'bar');
+        $this->assertEquals($this->app->make('cache')->tags([$cacheable->getCacheKey(), $cacheable->id])->get('foo'), 'bar');
     }
 
     /**
