@@ -32,5 +32,15 @@
       "Michaeljennings\\Broker\\Tests\\": "tests/"
     }
   },
+  "extra": {
+    "laravel": {
+      "providers": [
+        "Michaeljennings\\Broker\\BrokerServiceProvider"
+      ],
+      "aliases": {
+        "Broker": "Michaeljennings\\Broker\\Facades\\Broker"
+      }
+    }
+  },
   "minimum-stability": "stable"
 }
