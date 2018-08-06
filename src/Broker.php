@@ -2,9 +2,14 @@
 
 namespace Michaeljennings\Broker;
 
+use Closure;
 use Illuminate\Contracts\Cache\Repository;
+use Illuminate\Contracts\Events\Dispatcher;
 use Michaeljennings\Broker\Contracts\Broker as BrokerContract;
 use Michaeljennings\Broker\Contracts\Cacheable;
+use Michaeljennings\Broker\Events\CacheableFlushed;
+use Michaeljennings\Broker\Events\CacheableKeyForgotten;
+use Michaeljennings\Broker\Events\CacheableKeyWritten;
 
 class Broker implements BrokerContract
 {
@@ -16,13 +21,21 @@ class Broker implements BrokerContract
     protected $cache;
 
     /**
+     * The event dispatcher implementation.
+     *
+     * @var Dispatcher
+     */
+    protected $dispatcher;
+
+    /**
      * Broker construct.
      *
      * @param Repository $cache
      */
-    public function __construct(Repository $cache)
+    public function __construct(Repository $cache, Dispatcher $dispatcher)
     {
         $this->cache = $cache;
+        $this->dispatcher = $dispatcher;
     }
 
     /**
@@ -36,7 +49,11 @@ class Broker implements BrokerContract
      */
     public function put(Cacheable $cacheable, $key, $value, $minutes = 60)
     {
-        return $this->cache->tags($this->getTags($cacheable))->put($key, $value, $minutes);
+        $value = $this->cache->tags($this->getTags($cacheable))->put($key, $value, $minutes);
+
+        $this->event(new CacheableKeyWritten($cacheable, $key, $minutes));
+
+        return $value;
     }
 
     /**
@@ -49,7 +66,11 @@ class Broker implements BrokerContract
      */
     public function forever(Cacheable $cacheable, $key, $value)
     {
-        return $this->cache->tags($this->getTags($cacheable))->forever($key, $value);
+        $value = $this->cache->tags($this->getTags($cacheable))->forever($key, $value);
+
+        $this->event(new CacheableKeyWritten($cacheable, $key, 0));
+
+        return $value;
     }
 
     /**
@@ -58,12 +79,18 @@ class Broker implements BrokerContract
      *
      * @param Cacheable $cacheable
      * @param string    $key
-     * @param \Closure  $callback
+     * @param Closure  $callback
      * @param int       $minutes
      * @return mixed
      */
-    public function remember(Cacheable $cacheable, $key, \Closure $callback, $minutes = 60)
+    public function remember(Cacheable $cacheable, $key, Closure $callback, $minutes = 60)
     {
+        $callback = function() use ($cacheable, $key, $callback, $minutes) {
+            $this->event(new CacheableKeyWritten($cacheable, $key, $minutes));
+
+            return $callback();
+        };
+
         return $this->cache->tags($this->getTags($cacheable))->remember($key, $minutes, $callback);
     }
 
@@ -108,6 +135,8 @@ class Broker implements BrokerContract
             $this->cache->tags($this->getTags($cacheable))->forget($key);
         }
 
+        $this->event(new CacheableKeyForgotten($cacheable, $keys));
+
         return true;
     }
 
@@ -119,7 +148,9 @@ class Broker implements BrokerContract
      */
     public function flush(Cacheable $cacheable)
     {
-        return $this->cache->tags($this->getTags($cacheable))->flush();
+        $this->cache->tags($this->getTags($cacheable))->flush();
+
+        $this->event(new CacheableFlushed($cacheable));
     }
 
     /**
@@ -167,5 +198,15 @@ class Broker implements BrokerContract
     protected function getTags(Cacheable $cacheable)
     {
         return [$cacheable->getCacheKey(), $cacheable->getKey()];
+    }
+
+    /**
+     * Fire the event.
+     *
+     * @param mixed $event
+     */
+    protected function event($event)
+    {
+        $this->dispatcher->dispatch($event);
     }
 }
