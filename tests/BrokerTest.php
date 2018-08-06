@@ -2,6 +2,10 @@
 
 namespace Michaeljennings\Broker\Tests;
 
+use Illuminate\Support\Facades\Event;
+use Michaeljennings\Broker\Events\CacheableFlushed;
+use Michaeljennings\Broker\Events\CacheableKeyForgotten;
+use Michaeljennings\Broker\Events\CacheableKeyWritten;
 use Michaeljennings\Broker\Tests\Fixtures\TestModel;
 
 class BrokerTest extends TestCase
@@ -11,11 +15,15 @@ class BrokerTest extends TestCase
      */
     public function it_stores_an_item_in_the_cache()
     {
+        Event::fake();
+
         $cacheable = new TestModel(['id' => 1]);
 
         $this->makeBroker()->put($cacheable, 'foo', 'bar', 60);
 
         $this->assertEquals($this->app->make('cache')->tags([$cacheable->getCacheKey(), $cacheable->id])->get('foo'), 'bar');
+
+        Event::assertDispatched(CacheableKeyWritten::class);
     }
 
     /**
@@ -23,11 +31,15 @@ class BrokerTest extends TestCase
      */
     public function it_stores_an_item_in_the_cache_forever()
     {
+        Event::fake();
+
         $cacheable = new TestModel(['id' => 1]);
 
         $this->makeBroker()->forever($cacheable, 'foo', 'bar');
 
         $this->assertEquals($this->app->make('cache')->tags([$cacheable->getCacheKey(), $cacheable->id])->get('foo'), 'bar');
+
+        Event::assertDispatched(CacheableKeyWritten::class);
     }
 
     /**
@@ -35,6 +47,8 @@ class BrokerTest extends TestCase
      */
     public function it_stores_an_item_in_the_cache_using_a_callback()
     {
+        Event::fake();
+
         $cacheable = new TestModel(['id' => 1]);
 
         $this->makeBroker()->remember($cacheable, 'foo', function() {
@@ -42,6 +56,8 @@ class BrokerTest extends TestCase
         });
 
         $this->assertEquals($this->app->make('cache')->tags([$cacheable->getCacheKey(), $cacheable->id])->get('foo'), 'bar');
+
+        Event::assertDispatched(CacheableKeyWritten::class);
     }
 
     /**
@@ -77,6 +93,8 @@ class BrokerTest extends TestCase
      */
     public function it_removes_an_item_from_the_cache()
     {
+        Event::fake();
+
         $broker = $this->makeBroker();
         $cacheable = new TestModel(['id' => 1]);
 
@@ -87,6 +105,8 @@ class BrokerTest extends TestCase
         $broker->forget($cacheable, 'foo');
 
         $this->assertNull($broker->get($cacheable, 'foo'));
+
+        Event::assertDispatched(CacheableKeyForgotten::class);
     }
 
     /**
@@ -94,6 +114,8 @@ class BrokerTest extends TestCase
      */
     public function it_removes_multiple_items_from_the_cache()
     {
+        Event::fake();
+
         $broker = $this->makeBroker();
         $cacheable = new TestModel(['id' => 1]);
 
@@ -107,6 +129,8 @@ class BrokerTest extends TestCase
 
         $this->assertNull($broker->get($cacheable, 'foo'));
         $this->assertNull($broker->get($cacheable, 'baz'));
+
+        Event::assertDispatched(CacheableKeyForgotten::class);
     }
 
     /**
@@ -114,6 +138,8 @@ class BrokerTest extends TestCase
      */
     public function it_fluses_all_of_the_keys_for_a_cacheable_entity()
     {
+        Event::fake();
+
         $broker = $this->makeBroker();
         $cacheable = new TestModel(['id' => 1]);
 
@@ -127,6 +153,8 @@ class BrokerTest extends TestCase
 
         $this->assertNull($broker->get($cacheable, 'foo'));
         $this->assertNull($broker->get($cacheable, 'baz'));
+
+        Event::assertDispatched(CacheableFlushed::class);
     }
 
     /**
