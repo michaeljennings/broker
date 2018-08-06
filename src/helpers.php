@@ -8,7 +8,7 @@ if ( ! function_exists('broker')) {
      *
      * @param \Michaeljennings\Broker\Contracts\Cacheable|null $cacheable
      * @param null                                             $key
-     * @return mixed
+     * @return \Michaeljennings\Broker\Broker
      */
     function broker(\Michaeljennings\Broker\Contracts\Cacheable $cacheable = null, $key = null) {
         if ( ! $cacheable) {
