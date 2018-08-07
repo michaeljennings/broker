@@ -11,9 +11,7 @@ trait Cacheable
      */
     public static function bootCacheable()
     {
-        if ( ! is_null(static::$dispatcher)) {
-            static::observe(new Observer(static::$dispatcher));
-        }
+        static::observe(Observer::class);
     }
 
     /**

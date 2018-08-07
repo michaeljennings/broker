@@ -21,7 +21,10 @@ class BrokerTest extends TestCase
 
         $this->makeBroker()->put($cacheable, 'foo', 'bar', 60);
 
-        $this->assertEquals($this->app->make('cache')->tags([$cacheable->getCacheKey(), $cacheable->id])->get('foo'), 'bar');
+        $this->assertEquals(
+            $this->app->make('cache')->tags([$cacheable->getCacheKey(), $cacheable->getCacheKey().'.'.$cacheable->id])->get('foo'),
+            'bar'
+        );
 
         Event::assertDispatched(CacheableKeyWritten::class);
     }
@@ -37,7 +40,10 @@ class BrokerTest extends TestCase
 
         $this->makeBroker()->forever($cacheable, 'foo', 'bar');
 
-        $this->assertEquals($this->app->make('cache')->tags([$cacheable->getCacheKey(), $cacheable->id])->get('foo'), 'bar');
+        $this->assertEquals(
+            $this->app->make('cache')->tags([$cacheable->getCacheKey(), $cacheable->getCacheKey().'.'.$cacheable->id])->get('foo'),
+            'bar'
+        );
 
         Event::assertDispatched(CacheableKeyWritten::class);
     }
@@ -55,7 +61,10 @@ class BrokerTest extends TestCase
             return 'bar';
         });
 
-        $this->assertEquals($this->app->make('cache')->tags([$cacheable->getCacheKey(), $cacheable->id])->get('foo'), 'bar');
+        $this->assertEquals(
+            $this->app->make('cache')->tags([$cacheable->getCacheKey(), $cacheable->getCacheKey().'.'.$cacheable->id])->get('foo'),
+            'bar'
+        );
 
         Event::assertDispatched(CacheableKeyWritten::class);
     }
@@ -136,23 +145,23 @@ class BrokerTest extends TestCase
     /**
      * @test
      */
-    public function it_fluses_all_of_the_keys_for_a_cacheable_entity()
+    public function it_flushes_all_of_the_keys_for_a_cacheable_entity()
     {
         Event::fake();
 
         $broker = $this->makeBroker();
         $cacheable = new TestModel(['id' => 1]);
+        $cacheable2 = new TestModel(['id' => 2]);
 
         $broker->put($cacheable, 'foo', 'bar');
         $broker->put($cacheable, 'baz', 'qux');
-
-        $this->assertEquals($broker->get($cacheable, 'foo'), 'bar');
-        $this->assertEquals($broker->get($cacheable, 'baz'), 'qux');
+        $broker->put($cacheable2, 'foo', 'qux');
 
         $broker->flush($cacheable);
 
         $this->assertNull($broker->get($cacheable, 'foo'));
         $this->assertNull($broker->get($cacheable, 'baz'));
+        $this->assertEquals('qux', $broker->get($cacheable2, 'foo'));
 
         Event::assertDispatched(CacheableFlushed::class);
     }

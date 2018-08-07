@@ -148,7 +148,7 @@ class Broker implements BrokerContract
      */
     public function flush(Cacheable $cacheable)
     {
-        $this->cache->tags($this->getTags($cacheable))->flush();
+        $this->flushTags($this->relativeKey($cacheable));
 
         $this->event(new CacheableFlushed($cacheable));
     }
@@ -197,7 +197,18 @@ class Broker implements BrokerContract
      */
     protected function getTags(Cacheable $cacheable)
     {
-        return [$cacheable->getCacheKey(), $cacheable->getKey()];
+        return [$cacheable->getCacheKey(), $this->relativeKey($cacheable)];
+    }
+
+    /**
+     * Get the relative cacheable key.
+     *
+     * @param Cacheable $cacheable
+     * @return string
+     */
+    protected function relativeKey(Cacheable $cacheable)
+    {
+        return $cacheable->getCacheKey() . '.' . $cacheable->getKey();
     }
 
     /**
