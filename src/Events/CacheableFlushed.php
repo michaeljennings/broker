@@ -3,12 +3,11 @@
 namespace Michaeljennings\Broker\Events;
 
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Foundation\Events\Dispatchable;
 use Michaeljennings\Broker\Contracts\Cacheable;
 
 class CacheableFlushed
 {
-    use Dispatchable, SerializesModels;
+    use SerializesModels;
 
     /**
      * The cacheable entity that was flushed.
