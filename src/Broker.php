@@ -52,7 +52,7 @@ class Broker implements BrokerContract
     {
         $minutes = $this->minutesToCarbon($minutes);
 
-        $value = $this->cache->tags($this->getTags($cacheable))->put($key, $value, );
+        $value = $this->cache->tags($this->getTags($cacheable))->put($key, $value, $minutes);
 
         $this->event(new CacheableKeyWritten($cacheable, $key, $minutes));
 
