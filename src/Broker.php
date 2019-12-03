@@ -2,6 +2,7 @@
 
 namespace Michaeljennings\Broker;
 
+use Carbon\Carbon;
 use Closure;
 use Illuminate\Contracts\Cache\Repository;
 use Illuminate\Contracts\Events\Dispatcher;
@@ -41,15 +42,17 @@ class Broker implements BrokerContract
     /**
      * Store an item in the cache against the cacheable item.
      *
-     * @param Cacheable $cacheable
-     * @param string    $key
-     * @param mixed     $value
-     * @param int       $minutes
+     * @param Cacheable  $cacheable
+     * @param string     $key
+     * @param mixed      $value
+     * @param int|Carbon $minutes
      * @return mixed
      */
     public function put(Cacheable $cacheable, $key, $value, $minutes = 60)
     {
-        $value = $this->cache->tags($this->getTags($cacheable))->put($key, $value, $minutes);
+        $minutes = $this->minutesToCarbon($minutes);
+
+        $value = $this->cache->tags($this->getTags($cacheable))->put($key, $value, );
 
         $this->event(new CacheableKeyWritten($cacheable, $key, $minutes));
 
@@ -77,15 +80,17 @@ class Broker implements BrokerContract
      * If the keys doesn't exist against the cacheable item, run the provided
      * closure.
      *
-     * @param Cacheable $cacheable
-     * @param string    $key
-     * @param Closure  $callback
-     * @param int       $minutes
+     * @param Cacheable  $cacheable
+     * @param string     $key
+     * @param Closure    $callback
+     * @param int|Carbon $minutes
      * @return mixed
      */
     public function remember(Cacheable $cacheable, $key, Closure $callback, $minutes = 60)
     {
-        $callback = function() use ($cacheable, $key, $callback, $minutes) {
+        $minutes = $this->minutesToCarbon($minutes);
+
+        $callback = function () use ($cacheable, $key, $callback, $minutes) {
             $this->event(new CacheableKeyWritten($cacheable, $key, $minutes));
 
             return $callback();
@@ -127,7 +132,7 @@ class Broker implements BrokerContract
      */
     public function forget(Cacheable $cacheable, $keys)
     {
-        if ( ! is_array($keys)) {
+        if (! is_array($keys)) {
             $keys = [$keys];
         }
 
@@ -182,7 +187,7 @@ class Broker implements BrokerContract
      */
     public function flushTags($tags)
     {
-        if ( ! is_array($tags)) {
+        if (! is_array($tags)) {
             $tags = func_get_args();
         }
 
@@ -219,5 +224,20 @@ class Broker implements BrokerContract
     protected function event($event)
     {
         $this->dispatcher->dispatch($event);
+    }
+
+    /**
+     * Make sure the minutes are provided as a carbon object.
+     *
+     * @param int|Carbon $minutes
+     * @return Carbon
+     */
+    protected function minutesToCarbon($minutes)
+    {
+        if (! $minutes instanceof Carbon) {
+            $minutes = now()->addMinutes($minutes);
+        }
+
+        return $minutes;
     }
 }

@@ -2,6 +2,7 @@
 
 namespace Michaeljennings\Broker\Tests;
 
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Event;
 use Michaeljennings\Broker\Events\CacheableFlushed;
 use Michaeljennings\Broker\Events\CacheableKeyForgotten;
@@ -20,6 +21,25 @@ class BrokerTest extends TestCase
         $cacheable = new TestModel(['id' => 1]);
 
         $this->makeBroker()->put($cacheable, 'foo', 'bar', 60);
+
+        $this->assertEquals(
+            $this->app->make('cache')->tags([$cacheable->getCacheKey(), $cacheable->getCacheKey().'.'.$cacheable->id])->get('foo'),
+            'bar'
+        );
+
+        Event::assertDispatched(CacheableKeyWritten::class);
+    }
+
+    /**
+     * @test
+     */
+    public function it_stores_an_item_in_the_cache_and_passes_the_ttl_as_carbon()
+    {
+        Event::fake();
+
+        $cacheable = new TestModel(['id' => 1]);
+
+        $this->makeBroker()->put($cacheable, 'foo', 'bar', (new Carbon())->addMinutes(60));
 
         $this->assertEquals(
             $this->app->make('cache')->tags([$cacheable->getCacheKey(), $cacheable->getCacheKey().'.'.$cacheable->id])->get('foo'),
@@ -60,6 +80,27 @@ class BrokerTest extends TestCase
         $this->makeBroker()->remember($cacheable, 'foo', function() {
             return 'bar';
         });
+
+        $this->assertEquals(
+            $this->app->make('cache')->tags([$cacheable->getCacheKey(), $cacheable->getCacheKey().'.'.$cacheable->id])->get('foo'),
+            'bar'
+        );
+
+        Event::assertDispatched(CacheableKeyWritten::class);
+    }
+
+    /**
+     * @test
+     */
+    public function it_stores_an_item_in_the_cache_using_a_callback_and_sets_the_ttl_as_carbon()
+    {
+        Event::fake();
+
+        $cacheable = new TestModel(['id' => 1]);
+
+        $this->makeBroker()->remember($cacheable, 'foo', function() {
+            return 'bar';
+        }, (new Carbon())->addMinutes(60));
 
         $this->assertEquals(
             $this->app->make('cache')->tags([$cacheable->getCacheKey(), $cacheable->getCacheKey().'.'.$cacheable->id])->get('foo'),
